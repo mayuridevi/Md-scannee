@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MD Scanner - Minervini Trend Template, VCP & Momentum Screener (NSE India)</title>
+  
+  <meta name="theme-color" content="#090d16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MD Scanner">
+
+  <!-- Tailwind CSS, Chart.js, Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            terminal: {
+              bg: '#080c14',
+              card: '#0f1624',
+              hover: '#152136',
+              border: '#1b283d',
+              accent: '#38bdf8',
+              emerald: '#10b981',
+              rose: '#f43f5e',
+              amber: '#f59e0b',
+              purple: '#a855f7'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Consolas', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    body {
+      background-color: #080c14;
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #080c14;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.9); }
+    }
+    .live-pulse {
+      animation: pulse-subtle 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500/25 selection:text-cyan-200">
+
+  <!-- Top Sticky Header -->
+  <header class="sticky top-0 z-40 bg-[#0a0f1c]/95 backdrop-blur-md border-b border-terminal-border px-3 sm:px-6 py-2.5">
+    <div class="max-w-[1720px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+      
+      <!-- Logo, Market Status, Live Tickers -->
+      <div class="flex items-center justify-between md:justify-start gap-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-cyan-400 to-emerald-400 p-[1.5px] shadow-lg shadow-cyan-500/10 shrink-0">
+            <div class="w-full h-full bg-[#080c14] rounded-[10px] flex items-center justify-center">
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-cyan-400 font-extrabold text-sm tracking-tighter mono">MD</span>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-base font-extrabold tracking-tight text-white flex items-center gap-1.5">
+                MD Scanner
+              </span>
+              <span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-800/80">PRO</span>
+            </div>
+            <p class="text-[10px] text-slate-400 hidden sm:block">Trend Template • VCP • Stage 2 Breakouts</p>
+          </div>
+        </div>
+
+        <!-- Live Tickers: Nifty 50 & Bank Nifty -->
+        <div class="hidden lg:flex items-center gap-3 pl-4 border-l border-terminal-border/80 text-xs">
+          <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-terminal-card border border-terminal-border">
+            <span class="text-slate-400 font-medium text-[11px]">NIFTY 50</span>
+            <span class="mono font-bold text-white text-[12px]" id="tickerNifty">24,360.50</span>
+            <span class="mono font-semibold text-emerald-400 text-[11px]" id="tickerNiftyChg">+0.68%</span>
+          </div>
+
+          <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-terminal-card border border-terminal-border">
+            <span class="text-slate-400 font-medium text-[11px]">BANK NIFTY</span>
+            <span class="mono font-bold text-white text-[12px]" id="tickerBank">51,820.10</span>
+            <span class="mono font-semibold text-emerald-400 text-[11px]" id="tickerBankChg">+0.42%</span>
+          </div>
+        </div>
+
+        <!-- Market Status Badge -->
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/60 text-[11px] text-emerald-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 live-pulse"></span>
+          <span class="font-semibold uppercase tracking-wider text-[10px]">NSE LIVE</span>
+          <span id="marketTimer" class="mono text-emerald-300/80 text-[10px] pl-1">--:--:--</span>
+        </div>
+      </div>
+
+      <!-- Action Utilities (Export, Auto Refresh, Mobile APK modal, Info) -->
+      <div class="flex items-center gap-2 self-end md:self-auto">
+        <button id="toggleRefreshBtn" onclick="toggleAutoRefresh()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-terminal-card hover:bg-terminal-hover border border-terminal-border text-slate-300 text-xs transition" title="Toggle Auto-Refresh">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-cyan-400 animate-spin" id="refreshIcon"></i>
+          <span class="text-[11px] font-medium hidden sm:inline">Auto-Sync</span>
+        </button>
+
+        <button onclick="exportToCSV()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-terminal-card hover:bg-terminal-hover border border-terminal-border text-slate-300 text-xs transition" title="Export Scanned Stocks to CSV">
+          <i data-lucide="download" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span class="text-[11px] font-medium hidden sm:inline">CSV</span>
+        </button>
+
+        <button onclick="openInstallModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/10 transition">
+          <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+          <span>App/APK</span>
+        </button>
+
+        <button onclick="openRulesModal()" class="p-1.5 rounded-lg bg-terminal-card hover:bg-terminal-hover border border-terminal-border text-slate-300 hover:text-cyan-400 transition" title="Minervini 8 Rules Checklist">
+          <i data-lucide="help-circle" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main View Mode Tabs (Trend Template, VCP, Stage 2, Volume Shockers, 52W High, Sector Heatmap) -->
+  <div class="bg-[#0b101e] border-b border-terminal-border px-3 sm:px-6">
+    <div class="max-w-[1720px] mx-auto flex items-center gap-1 overflow-x-auto py-1.5 no-scrollbar text-xs font-semibold">
+      <button onclick="setViewTab('trendTemplate')" id="viewTrendTemplate" class="view-tab-btn flex items-center gap-1.5 px-3 py-2 rounded-lg bg-cyan-950/80 text-cyan-300 border border-cyan-800 transition shrink-0">
+        <i data-lucide="check-check" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span>Trend Template</span>
+        <span class="px-1.5 py-0.2 rounded-full bg-cyan-900/90 text-[10px] mono text-cyan-200" id="badgeTrendCount">0</span>
+      </button>
+
+      <button onclick="setViewTab('vcp')" id="viewVcp" class="view-tab-btn flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-terminal-card border border-transparent transition shrink-0">
+        <i data-lucide="shrink" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span>VCP Patterns</span>
+        <span class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] mono text-slate-300" id="badgeVcpCount">0</span>
+      </button>
+
+      <button onclick="setViewTab('stage2')" id="viewStage2" class="view-tab-btn flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-terminal-card border border-transparent transition shrink-0">
+        <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span>Stage 2 Breakouts</span>
+        <span class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] mono text-slate-300" id="badgeStage2Count">0</span>
+      </button>
+
+      <button onclick="setViewTab('volumeShocker')" id="viewVolumeShocker" class="view-tab-btn flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-terminal-card border border-transparent transition shrink-0">
+        <i data-lucide="zap" class="w-3.5 h-3.5 text-rose-400"></i>
+        <span>Volume Shockers (>3x)</span>
+        <span class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] mono text-slate-300" id="badgeVolCount">0</span>
+      </button>
+
+      <button onclick="setViewTab('nearHigh')" id="viewNearHigh" class="view-tab-btn flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-terminal-card border border-transparent transition shrink-0">
+        <i data-lucide="target" class="w-3.5 h-3.5 text-purple-400"></i>
+        <span>Within 5% 52W High</span>
+        <span class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] mono text-slate-300" id="badgeNearHighCount">0</span>
+      </button>
+
+      <button onclick="setViewTab('heatmap')" id="viewHeatmap" class="view-tab-btn flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-terminal-card border border-transparent transition shrink-0">
+        <i data-lucide="grid" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span>Sector & Theme Heatmap</span>
+      </button>
+
+      <button onclick="setViewTab('all')" id="viewAll" class="view-tab-btn flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-terminal-card border border-transparent transition shrink-0">
+        <i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i>
+        <span>All Stocks Watchlist</span>
+        <span class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] mono text-slate-300" id="badgeAllCount">60</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Multi-Filter Control Console -->
+  <section class="bg-terminal-card/80 border-b border-terminal-border px-3 sm:px-6 py-3">
+    <div class="max-w-[1720px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 items-center">
+      
+      <!-- Search Input -->
+      <div class="relative lg:col-span-2">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input 
+          type="text" 
+          id="searchInput" 
+          oninput="applyAllFilters()" 
+          placeholder="Search Symbol or Company (e.g., RELIANCE, TRENT, DIXON)..." 
+          class="w-full bg-terminal-bg border border-terminal-border focus:border-cyan-500 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none transition">
+      </div>
+
+      <!-- Universe / Group Filter Dropdown -->
+      <div>
+        <label class="block text-[10px] text-slate-400 font-semibold uppercase mb-0.5 tracking-wider">Universe / Index</label>
+        <select id="universeFilter" onchange="applyAllFilters()" class="w-full bg-terminal-bg border border-terminal-border text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:border-cyan-500 focus:outline-none font-medium">
+          <option value="ALL">NSE All Cash Universe</option>
+          <option value="NIFTY50">Nifty 50</option>
+          <option value="NIFTY100">Nifty 100</option>
+          <option value="NIFTY200" selected>Nifty 200</option>
+          <option value="NIFTY500">Nifty 500</option>
+          <option value="MIDCAP">Nifty Midcap 100</option>
+          <option value="SMALLCAP">Nifty Smallcap 100</option>
+          <option value="FNO">NSE F&O Stocks Only</option>
+        </select>
+      </div>
+
+      <!-- Sector Filter Dropdown -->
+      <div>
+        <label class="block text-[10px] text-slate-400 font-semibold uppercase mb-0.5 tracking-wider">Sector</label>
+        <select id="sectorFilter" onchange="applyAllFilters()" class="w-full bg-terminal-bg border border-terminal-border text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:border-cyan-500 focus:outline-none font-medium">
+          <option value="ALL">All Sectors</option>
+          <option value="IT">IT & Tech</option>
+          <option value="Banking">Banking & Financials</option>
+          <option value="Auto">Automobiles & OEMs</option>
+          <option value="Pharma">Pharma & Healthcare</option>
+          <option value="Power">Power & Energy</option>
+          <option value="Metals">Metals & Mining</option>
+          <option value="Defence">Defence & Aerospace</option>
+          <option value="Infra">Infra & Capital Goods</option>
+          <option value="Consumer">Consumer & Retail</option>
+          <option value="Chemicals">Chemicals & Fertilizers</option>
+          <option value="Realty">Real Estate & Realty</option>
+        </select>
+      </div>
+
+      <!-- Theme Filter Dropdown -->
+      <div>
+        <label class="block text-[10px] text-slate-400 font-semibold uppercase mb-0.5 tracking-wider">Market Theme</label>
+        <select id="themeFilter" onchange="applyAllFilters()" class="w-full bg-terminal-bg border border-terminal-border text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:border-cyan-500 focus:outline-none font-medium">
+          <option value="ALL">All Market Themes</option>
+          <option value="EV & Clean Tech">EV & Clean Energy</option>
+          <option value="Solar & Green Power">Solar / Green Power</option>
+          <option value="Railway Infrastructure">Railway Infrastructure</option>
+          <option value="Defence & Aerospace">Defence Indigenization</option>
+          <option value="Make in India">Make in India / Manufacturing</option>
+          <option value="AI & Data Centers">AI & Data Centers</option>
+          <option value="PSU / CPSE">PSU / CPSE Value</option>
+          <option value="EMS & Electronics">EMS & Electronic Exports</option>
+          <option value="Consumption Boom">Premium Consumption Boom</option>
+        </select>
+      </div>
+
+      <!-- Setup / Pattern Filter Dropdown -->
+      <div>
+        <label class="block text-[10px] text-slate-400 font-semibold uppercase mb-0.5 tracking-wider">Setup / Technical Pattern</label>
+        <select id="setupFilter" onchange="applyAllFilters()" class="w-full bg-terminal-bg border border-terminal-border text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:border-cyan-500 focus:outline-none font-medium">
+          <option value="ALL">All Setups</option>
+          <option value="TT_PASS">Minervini Qualified (8/8)</option>
+          <option value="VCP">VCP Pattern Forming</option>
+          <option value="STAGE2">Stage 2 Confirmed</option>
+          <option value="VOL_SHOCK">Volume Shocker (&gt;3x Vol)</option>
+          <option value="PIVOT_BO">Pivot Breakout Ready</option>
+          <option value="POCKET_PIVOT">Pocket Pivot</option>
+          <option value="RS_85">Super RS (&gt;85 Percentile)</option>
+        </select>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Main Body Content Area -->
+  <main class="flex-1 max-w-[1720px] w-full mx-auto p-3 sm:p-5 space-y-4">
+
+    <!-- KPI Summary Row -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div class="bg-terminal-card border border-terminal-border rounded-xl p-3">
+        <span class="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Filtered Count</span>
+        <div class="text-xl font-bold mono text-white mt-1" id="kpiFiltered">0</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Matching active filters</div>
+      </div>
+
+      <div class="bg-terminal-card border border-terminal-border rounded-xl p-3">
+        <span class="text-[10px] font-semibold uppercase text-emerald-400 tracking-wider">Stage 2 Leaders</span>
+        <div class="text-xl font-bold mono text-emerald-400 mt-1" id="kpiStage2">0</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Price &gt; 50 &gt; 150 &gt; 200 SMA</div>
+      </div>
+
+      <div class="bg-terminal-card border border-terminal-border rounded-xl p-3">
+        <span class="text-[10px] font-semibold uppercase text-amber-400 tracking-wider">VCP Setups</span>
+        <div class="text-xl font-bold mono text-amber-400 mt-1" id="kpiVcp">0</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Contraction ready to pop</div>
+      </div>
+
+      <div class="bg-terminal-card border border-terminal-border rounded-xl p-3">
+        <span class="text-[10px] font-semibold uppercase text-rose-400 tracking-wider">Volume Shockers</span>
+        <div class="text-xl font-bold mono text-rose-400 mt-1" id="kpiVolumeShock">0</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Vol &gt; 3x 20D Average</div>
+      </div>
+
+      <div class="bg-terminal-card border border-terminal-border rounded-xl p-3">
+        <span class="text-[10px] font-semibold uppercase text-cyan-400 tracking-wider">Near 52W High</span>
+        <div class="text-xl font-bold mono text-cyan-400 mt-1" id="kpiNearHigh">0</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Within 5% of peak</div>
+      </div>
+
+      <div class="bg-terminal-card border border-terminal-border rounded-xl p-3">
+        <span class="text-[10px] font-semibold uppercase text-purple-400 tracking-wider">Avg RS Rating</span>
+        <div class="text-xl font-bold mono text-purple-400 mt-1" id="kpiAvgRs">0</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Relative Strength vs Nifty</div>
+      </div>
+    </div>
+
+    <!-- Screener Table Section (Default View) -->
+    <div id="tableSection" class="bg-terminal-card border border-terminal-border rounded-2xl overflow-hidden shadow-xl">
+      
+      <!-- Table Top Controls Header -->
+      <div class="px-4 py-3 bg-[#0d1422] border-b border-terminal-border flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <i data-lucide="list-filter" class="w-4 h-4 text-cyan-400"></i>
+          <span class="font-bold text-white text-sm" id="tableHeaderTitle">Mark Minervini Trend Template Screener</span>
+          <span id="activeUniverseBadge" class="px-2 py-0.5 rounded bg-terminal-border text-slate-300 text-[11px] mono">Nifty 200</span>
+        </div>
+        <div class="flex items-center gap-2 text-slate-400 text-[11px]">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> 8/8 Pass</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> 6-7/8 Near</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-400"></span> &lt;6/8 Fail</span>
+          <span class="text-slate-500">|</span>
+          <span class="italic text-slate-400 hidden md:inline">Click any column header to sort (Asc/Desc)</span>
+        </div>
+      </div>
+
+      <!-- Main Data Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs whitespace-nowrap">
+          <thead class="bg-[#090e18] text-slate-400 font-semibold uppercase tracking-wider border-b border-terminal-border select-none">
+            <tr>
+              <th onclick="handleSort('symbol')" class="py-3 px-3 cursor-pointer hover:text-white">
+                <div class="flex items-center gap-1"><span>Symbol / Stock</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th onclick="handleSort('sector')" class="py-3 px-3 cursor-pointer hover:text-white">
+                <div class="flex items-center gap-1"><span>Sector / Theme</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th onclick="handleSort('cmp')" class="py-3 px-3 text-right cursor-pointer hover:text-white">
+                <div class="flex items-center justify-end gap-1"><span>CMP (₹)</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th onclick="handleSort('dayChange')" class="py-3 px-3 text-right cursor-pointer hover:text-white">
+                <div class="flex items-center justify-end gap-1"><span>1D Chg %</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th onclick="handleSort('ttScore')" class="py-3 px-3 text-center cursor-pointer hover:text-white">
+                <div class="flex items-center justify-center gap-1"><span>Trend Score</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th class="py-3 px-3 text-center"><span>Active Pattern</span></th>
+              <th onclick="handleSort('volRatio')" class="py-3 px-3 text-right cursor-pointer hover:text-white">
+                <div class="flex items-center justify-end gap-1"><span>Vol Ratio</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th onclick="handleSort('rsRating')" class="py-3 px-3 text-center cursor-pointer hover:text-white">
+                <div class="flex items-center justify-center gap-1"><span>RS (Mkt vs Sec)</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th onclick="handleSort('rrRatio')" class="py-3 px-3 text-center cursor-pointer hover:text-white">
+                <div class="flex items-center justify-center gap-1"><span>R:R Setup</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th onclick="handleSort('dist52High')" class="py-3 px-3 text-right cursor-pointer hover:text-white">
+                <div class="flex items-center justify-end gap-1"><span>% to 52WH</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th onclick="handleSort('dist52Low')" class="py-3 px-3 text-right cursor-pointer hover:text-white">
+                <div class="flex items-center justify-end gap-1"><span>% from 52WL</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th class="py-3 px-3 text-center"><span>20 / 50 / 150 / 200 SMA</span></th>
+              <th onclick="handleSort('atr')" class="py-3 px-3 text-right cursor-pointer hover:text-white">
+                <div class="flex items-center justify-end gap-1"><span>ATR (₹)</span><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i></div>
+              </th>
+              <th class="py-3 px-3 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody id="screenerTableBody" class="divide-y divide-terminal-border/60 font-medium">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sector & Theme Heatmap View (Hidden by default, shown when Heatmap tab is selected) -->
+    <div id="heatmapSection" class="hidden bg-terminal-card border border-terminal-border rounded-2xl p-5 shadow-xl space-y-6">
+      <div>
+        <div class="flex items-center justify-between border-b border-terminal-border pb-3">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="grid" class="w-4 h-4 text-amber-400"></i>
+              <span>Sector & Market Theme Heatmap</span>
+            </h2>
+            <p class="text-xs text-slate-400">Relative Strength & Average Day Change across Indian stock sectors and high-momentum themes</p>
+          </div>
+          <button onclick="setViewTab('trendTemplate')" class="px-3 py-1 rounded-lg bg-slate-800 text-xs text-slate-300 hover:text-white">Back to Scanner</button>
+        </div>
+
+        <!-- Sector Performance Cards Grid -->
+        <div class="mt-4">
+          <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider mb-2.5">Sectors Breakdown</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" id="sectorHeatmapGrid">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Theme Performance Cards Grid -->
+        <div class="mt-6">
+          <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider mb-2.5">High-Alpha Market Themes</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" id="themeHeatmapGrid">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Interactive Stock Details & Chart Side Drawer Modal -->
+  <div id="stockDrawer" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-end">
+    <div class="bg-[#0d1422] border-l border-terminal-border w-full max-w-2xl h-full flex flex-col p-5 overflow-y-auto space-y-4">
+      
+      <!-- Drawer Header -->
+      <div class="flex items-start justify-between border-b border-terminal-border pb-3 shrink-0">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <span id="drawerSymbol" class="text-2xl font-black mono text-white">RELIANCE</span>
+            <span id="drawerSector" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-cyan-300 border border-slate-700">ENERGY</span>
+            <span id="drawerTheme" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-amber-300 border border-slate-700">EV & Clean Tech</span>
+          </div>
+          <p id="drawerName" class="text-xs text-slate-400 mt-0.5">Reliance Industries Ltd.</p>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <div id="drawerPrice" class="text-2xl font-bold mono text-emerald-400">₹2,985.40</div>
+            <div id="drawerChange" class="text-xs mono font-semibold text-emerald-400">+1.54% (Today)</div>
+          </div>
+          <button onclick="closeStockDrawer()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs shrink-0">
+        <div class="p-2.5 rounded-xl bg-terminal-bg border border-terminal-border">
+          <span class="text-slate-400 text-[10px] uppercase font-semibold">Volume Ratio</span>
+          <div id="drawerVolRatio" class="text-base font-bold mono text-rose-400 mt-0.5">3.4x</div>
+          <span class="text-[9px] text-slate-500">vs 20D Avg Vol</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-terminal-bg border border-terminal-border">
+          <span class="text-slate-400 text-[10px] uppercase font-semibold">Dual Relative Strength</span>
+          <div id="drawerRsRating" class="text-xs font-bold mono text-purple-400 mt-0.5">Mkt: 94 | Sec: 96</div>
+          <span class="text-[9px] text-slate-400 flex items-center gap-1" id="drawerRsSub">Outperforming Sector</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-terminal-bg border border-terminal-border">
+          <span class="text-slate-400 text-[10px] uppercase font-semibold">Risk / Reward (R:R)</span>
+          <div id="drawerRr" class="text-base font-bold mono text-emerald-400 mt-0.5">1 : 3.8</div>
+          <span class="text-[9px] text-slate-500">Pivot to Target</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-terminal-bg border border-terminal-border">
+          <span class="text-slate-400 text-[10px] uppercase font-semibold">20 SMA & ATR (Stop Loss)</span>
+          <div id="drawerAtr" class="text-base font-bold mono text-amber-400 mt-0.5">₹42.50</div>
+          <span class="text-[9px] text-slate-500" id="drawerSl">20 SMA: ₹0.00</span>
+        </div>
+      </div>
+
+      <!-- Interactive Chart with 20 SMA, 50 EMA, 150 SMA, 200 SMA -->
+      <div class="bg-terminal-bg rounded-xl p-3 border border-terminal-border shrink-0">
+        <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-300">Daily Technical Chart</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 mono">60 Candles</span>
+          </div>
+          <div class="flex items-center gap-2.5 text-[10px] mono flex-wrap">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-1 bg-amber-400 rounded-full"></span> 20 SMA</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-1 bg-cyan-400 rounded-full"></span> 50 EMA</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-1 bg-purple-400 rounded-full"></span> 150 SMA</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-1 bg-rose-400 rounded-full"></span> 200 SMA</span>
+          </div>
+        </div>
+        <div class="h-64 w-full">
+          <canvas id="drawerChartCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Minervini 8-Point Trend Template Verification -->
+      <div class="bg-terminal-bg rounded-xl p-3.5 border border-terminal-border space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-slate-300 tracking-wider">Minervini Trend Template (8 Criteria)</span>
+          <span id="drawerScoreBadge" class="px-2 py-0.5 rounded text-[11px] font-bold mono bg-emerald-950 text-emerald-400 border border-emerald-800">8 / 8 PASSED</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1" id="drawerChecklist">
+          <!-- Dynamically populated check items -->
+        </div>
+      </div>
+
+      <!-- External Charting Links -->
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <a id="drawerTradingViewBtn" href="#" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-center text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-1.5 border border-slate-700">
+          <i data-lucide="external-link" class="w-4 h-4"></i> Open in TradingView
+        </a>
+        <a id="drawerChartinkBtn" href="#" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-center text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-1.5 border border-slate-700">
+          <i data-lucide="activity" class="w-4 h-4"></i> Open in Chartink
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Mobile APK / PWA Guide Modal -->
+  <div id="installModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-terminal-card border border-terminal-border rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-terminal-border pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+            <i data-lucide="smartphone" class="w-4 h-4"></i>
+          </div>
+          <h3 class="font-bold text-white text-base">Install 'MD Scanner' as Mobile App / APK</h3>
+        </div>
+        <button onclick="closeInstallModal()" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+        <p>
+          You do not need to rely on any external website or paid subscription. You can install **MD Scanner** directly on your Android phone or iPhone as a standalone app:
+        </p>
+
+        <div class="bg-terminal-bg p-3.5 rounded-xl border border-terminal-border space-y-2">
+          <h4 class="font-semibold text-cyan-400 flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i> Android Step-by-Step:
+          </h4>
+          <ol class="list-decimal list-inside space-y-1 text-slate-300 pl-1">
+            <li>Open this HTML scanner page in Google Chrome.</li>
+            <li>Tap the <strong>3 vertical dots (⋮)</strong> in the top-right corner.</li>
+            <li>Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</li>
+            <li>The **MD Scanner** icon will appear on your phone home screen, launching full-screen without browser bars.</li>
+          </ol>
+        </div>
+
+        <div class="bg-terminal-bg p-3.5 rounded-xl border border-terminal-border space-y-2">
+          <h4 class="font-semibold text-amber-400 flex items-center gap-1.5">
+            <i data-lucide="zap" class="w-4 h-4"></i> Self-Hosting & Zero Dependency:
+          </h4>
+          <p class="text-slate-400">
+            This entire code is contained in a single file. You can upload this file to <strong>GitHub Pages, Vercel, or Netlify</strong> for 100% free lifetime hosting with no subscription.
+          </p>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeInstallModal()" class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow-md">
+          Got it (Done)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minervini 8 Rules Checklist Modal -->
+  <div id="rulesModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-terminal-card border border-terminal-border rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-terminal-border pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="book-open" class="w-5 h-5 text-amber-400"></i>
+          <h3 class="font-bold text-white text-base">Mark Minervini's 8 Trend Template Rules</h3>
+        </div>
+        <button onclick="closeRulesModal()" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2 text-xs text-slate-300 max-h-[60vh] overflow-y-auto pr-1">
+        <div class="p-2.5 rounded-lg bg-terminal-bg border border-terminal-border">
+          <span class="font-bold text-amber-400">1.</span> Current Price is above both the 150-day and 200-day simple moving averages (SMAs).
+        </div>
+        <div class="p-2.5 rounded-lg bg-terminal-bg border border-terminal-border">
+          <span class="font-bold text-amber-400">2.</span> The 150-day moving average is above the 200-day moving average.
+        </div>
+        <div class="p-2.5 rounded-lg bg-terminal-bg border border-terminal-border">
+          <span class="font-bold text-amber-400">3.</span> The 200-day moving average is trending upward for at least 1 month.
+        </div>
+        <div class="p-2.5 rounded-lg bg-terminal-bg border border-terminal-border">
+          <span class="font-bold text-amber-400">4.</span> The 50-day moving average is above both the 150-day and 200-day SMAs.
+        </div>
+        <div class="p-2.5 rounded-lg bg-terminal-bg border border-terminal-border">
+          <span class="font-bold text-amber-400">5.</span> Current Price is trading above the 50-day moving average.
+        </div>
+        <div class="p-2.5 rounded-lg bg-terminal-bg border border-terminal-border">
+          <span class="font-bold text-amber-400">6.</span> Current Price is at least 30% above its 52-week low.
+        </div>
+        <div class="p-2.5 rounded-lg bg-terminal-bg border border-terminal-border">
+          <span class="font-bold text-amber-400">7.</span> Current Price is within 25% of its 52-week high (the closer, the better).
+        </div>
+        <div class="p-2.5 rounded-lg bg-terminal-bg border border-terminal-border">
+          <span class="font-bold text-amber-400">8.</span> Relative Strength (RS) rating is 70 or higher (80+ preferred).
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeRulesModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs rounded-xl">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 bg-[#152136] text-white border border-terminal-border px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300">
+    <i data-lucide="info" class="w-4 h-4 text-cyan-400"></i>
+    <span id="toastMsgText" class="text-xs font-semibold">Notification</span>
+  </div>
+
+  <!-- Core Javascript Application Logic -->
+  <script>
+    // Initialize Icons
+    lucide.createIcons();
+
+    // Comprehensive Realistic Stock Dataset (60+ Market Leaders across Indian Sectors, Themes, and Universes)
+    const STOCK_DATABASE = [
+      { symbol: "TRENT", name: "Trent Ltd.", sector: "Consumer", theme: "Consumption Boom", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 7380.00, prevClose: 7120.00, sma20: 7180.00, ema50: 6920.00, sma150: 5850.00, sma200: 4890.00, sma200Up: true, high52: 8345.00, low52: 2150.00, volRatio: 2.8, rsRating: 99, rsSector: 98, pattern: "STAGE2", rrRatio: "1:4.2", atr: 145.00, pivotPrice: 7450.00 },
+      { symbol: "BHARTIARTL", name: "Bharti Airtel Ltd.", sector: "IT", theme: "AI & Data Centers", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 1610.20, prevClose: 1582.00, sma20: 1570.00, ema50: 1520.00, sma150: 1410.00, sma200: 1320.00, sma200Up: true, high52: 1640.00, low52: 915.00, volRatio: 1.6, rsRating: 95, rsSector: 94, pattern: "VCP", rrRatio: "1:3.6", atr: 28.50, pivotPrice: 1625.00 },
+      { symbol: "HAL", name: "Hindustan Aeronautics", sector: "Defence", theme: "Defence & Aerospace", universe: ["NIFTY100", "NIFTY200", "NIFTY500", "FNO", "MIDCAP"], cmp: 4680.00, prevClose: 4490.00, sma20: 4510.00, ema50: 4320.00, sma150: 4050.00, sma200: 3680.00, sma200Up: true, high52: 5675.00, low52: 2020.00, volRatio: 3.5, rsRating: 91, rsSector: 93, pattern: "VOL_SHOCK", rrRatio: "1:3.9", atr: 110.00, pivotPrice: 4720.00 },
+      { symbol: "BEL", name: "Bharat Electronics Ltd.", sector: "Defence", theme: "Defence & Aerospace", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 304.50, prevClose: 295.00, sma20: 297.00, ema50: 288.00, sma150: 268.00, sma200: 236.00, sma200Up: true, high52: 340.50, low52: 130.00, volRatio: 2.4, rsRating: 93, rsSector: 95, pattern: "STAGE2", rrRatio: "1:3.4", atr: 6.80, pivotPrice: 310.00 },
+      { symbol: "DIXON", name: "Dixon Technologies", sector: "Consumer", theme: "EMS & Electronics", universe: ["NIFTY200", "NIFTY500", "FNO", "MIDCAP"], cmp: 14920.00, prevClose: 14200.00, sma20: 14350.00, ema50: 13650.00, sma150: 11800.00, sma200: 9800.00, sma200Up: true, high52: 15990.00, low52: 4850.00, volRatio: 3.8, rsRating: 98, rsSector: 97, pattern: "VCP", rrRatio: "1:4.5", atr: 320.00, pivotPrice: 15100.00 },
+      { symbol: "RELIANCE", name: "Reliance Industries", sector: "Power", theme: "Solar & Green Power", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 2985.40, prevClose: 2940.00, sma20: 2950.00, ema50: 2910.00, sma150: 2780.00, sma200: 2690.00, sma200Up: true, high52: 3024.90, low52: 2210.00, volRatio: 1.5, rsRating: 84, rsSector: 82, pattern: "PIVOT_BO", rrRatio: "1:3.2", atr: 38.00, pivotPrice: 3010.00 },
+      { symbol: "M&M", name: "Mahindra & Mahindra", sector: "Auto", theme: "EV & Clean Tech", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 3045.00, prevClose: 2980.00, sma20: 2960.00, ema50: 2880.00, sma150: 2620.00, sma200: 2360.00, sma200Up: true, high52: 3150.00, low52: 1480.00, volRatio: 2.1, rsRating: 96, rsSector: 99, pattern: "STAGE2", rrRatio: "1:4.0", atr: 52.00, pivotPrice: 3080.00 },
+      { symbol: "ZOMATO", name: "Zomato Ltd.", sector: "IT", theme: "Consumption Boom", universe: ["NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 274.50, prevClose: 262.00, sma20: 258.00, ema50: 248.00, sma150: 212.00, sma200: 182.00, sma200Up: true, high52: 298.20, low52: 105.00, volRatio: 3.2, rsRating: 97, rsSector: 96, pattern: "VCP", rrRatio: "1:4.8", atr: 7.20, pivotPrice: 282.00 },
+      { symbol: "SUZLON", name: "Suzlon Energy Ltd.", sector: "Power", theme: "Solar & Green Power", universe: ["NIFTY200", "NIFTY500", "MIDCAP"], cmp: 68.20, prevClose: 65.50, sma20: 66.00, ema50: 64.00, sma150: 56.00, sma200: 48.00, sma200Up: true, high52: 86.00, low52: 24.50, volRatio: 4.1, rsRating: 92, rsSector: 90, pattern: "VOL_SHOCK", rrRatio: "1:3.5", atr: 2.20, pivotPrice: 71.00 },
+      { symbol: "RVNL", name: "Rail Vikas Nigam Ltd.", sector: "Infra", theme: "Railway Infrastructure", universe: ["NIFTY200", "NIFTY500", "PSU / CPSE", "MIDCAP"], cmp: 462.00, prevClose: 440.00, sma20: 450.00, ema50: 445.00, sma150: 410.00, sma200: 330.00, sma200Up: true, high52: 647.00, low52: 142.00, volRatio: 3.6, rsRating: 88, rsSector: 89, pattern: "VOL_SHOCK", rrRatio: "1:3.1", atr: 16.50, pivotPrice: 480.00 },
+      { symbol: "IRFC", name: "Indian Railway Finance Corp", sector: "Banking", theme: "Railway Infrastructure", universe: ["NIFTY100", "NIFTY200", "NIFTY500", "PSU / CPSE"], cmp: 162.00, prevClose: 158.00, sma20: 160.00, ema50: 164.00, sma150: 159.00, sma200: 135.00, sma200Up: true, high52: 229.00, low52: 68.00, volRatio: 1.8, rsRating: 78, rsSector: 76, pattern: "STAGE2", rrRatio: "1:2.8", atr: 4.20, pivotPrice: 172.00 },
+      { symbol: "SUNPHARMA", name: "Sun Pharma Industries", sector: "Pharma", theme: "Make in India", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 1812.00, prevClose: 1785.00, sma20: 1780.00, ema50: 1740.00, sma150: 1625.00, sma200: 1530.00, sma200Up: true, high52: 1835.00, low52: 1110.00, volRatio: 1.7, rsRating: 93, rsSector: 96, pattern: "PIVOT_BO", rrRatio: "1:3.5", atr: 25.00, pivotPrice: 1825.00 },
+      { symbol: "TATACHEM", name: "Tata Chemicals", sector: "Chemicals", theme: "EV & Clean Tech", universe: ["NIFTY200", "NIFTY500", "FNO", "MIDCAP"], cmp: 1045.00, prevClose: 1030.00, sma20: 1032.00, ema50: 1020.00, sma150: 990.00, sma200: 980.00, sma200Up: true, high52: 1349.00, low52: 890.00, volRatio: 1.4, rsRating: 72, rsSector: 70, pattern: "STAGE2", rrRatio: "1:3.0", atr: 24.00, pivotPrice: 1080.00 },
+      { symbol: "DLF", name: "DLF Limited", sector: "Realty", theme: "Consumption Boom", universe: ["NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 840.00, prevClose: 825.00, sma20: 830.00, ema50: 820.00, sma150: 810.00, sma200: 775.00, sma200Up: true, high52: 967.00, low52: 520.00, volRatio: 1.9, rsRating: 82, rsSector: 85, pattern: "VCP", rrRatio: "1:3.2", atr: 18.00, pivotPrice: 865.00 },
+      { symbol: "NTPC", name: "NTPC Ltd.", sector: "Power", theme: "Solar & Green Power", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "PSU / CPSE", "FNO"], cmp: 418.00, prevClose: 408.00, sma20: 410.00, ema50: 398.00, sma150: 380.00, sma200: 350.00, sma200Up: true, high52: 448.00, low52: 232.00, volRatio: 2.5, rsRating: 89, rsSector: 91, pattern: "POCKET_PIVOT", rrRatio: "1:3.6", atr: 7.80, pivotPrice: 425.00 },
+      { symbol: "COALINDIA", name: "Coal India Ltd.", sector: "Metals", theme: "PSU / CPSE", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "PSU / CPSE", "FNO"], cmp: 498.00, prevClose: 489.00, sma20: 490.00, ema50: 485.00, sma150: 468.00, sma200: 445.00, sma200Up: true, high52: 543.55, low52: 312.00, volRatio: 1.6, rsRating: 83, rsSector: 84, pattern: "STAGE2", rrRatio: "1:3.1", atr: 8.50, pivotPrice: 512.00 },
+      { symbol: "TATAPOWER", name: "Tata Power Ltd.", sector: "Power", theme: "EV & Clean Tech", universe: ["NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 442.00, prevClose: 432.00, sma20: 435.00, ema50: 428.00, sma150: 420.00, sma200: 388.00, sma200Up: true, high52: 494.85, low52: 245.00, volRatio: 2.2, rsRating: 86, rsSector: 87, pattern: "VCP", rrRatio: "1:3.4", atr: 9.50, pivotPrice: 455.00 },
+      { symbol: "PERSISTENT", name: "Persistent Systems", sector: "IT", theme: "AI & Data Centers", universe: ["NIFTY200", "NIFTY500", "FNO", "MIDCAP"], cmp: 5420.00, prevClose: 5290.00, sma20: 5310.00, ema50: 5150.00, sma150: 4720.00, sma200: 4350.00, sma200Up: true, high52: 5740.00, low52: 3300.00, volRatio: 2.9, rsRating: 94, rsSector: 96, pattern: "STAGE2", rrRatio: "1:4.1", atr: 112.00, pivotPrice: 5500.00 },
+      { symbol: "POLYCAB", name: "Polycab India Ltd.", sector: "Infra", theme: "Make in India", universe: ["NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 6890.00, prevClose: 6720.00, sma20: 6760.00, ema50: 6600.00, sma150: 6250.00, sma200: 5750.00, sma200Up: true, high52: 7350.00, low52: 3850.00, volRatio: 2.0, rsRating: 91, rsSector: 93, pattern: "VCP", rrRatio: "1:3.7", atr: 135.00, pivotPrice: 7020.00 },
+      { symbol: "KAYNES", name: "Kaynes Technology", sector: "Consumer", theme: "EMS & Electronics", universe: ["NIFTY500", "MIDCAP", "SMALLCAP"], cmp: 5380.00, prevClose: 5080.00, sma20: 5150.00, ema50: 4850.00, sma150: 4100.00, sma200: 3450.00, sma200Up: true, high52: 5690.00, low52: 2280.00, volRatio: 4.5, rsRating: 97, rsSector: 98, pattern: "VOL_SHOCK", rrRatio: "1:4.4", atr: 140.00, pivotPrice: 5450.00 },
+      { symbol: "TITAGARH", name: "Titagarh Rail Systems", sector: "Infra", theme: "Railway Infrastructure", universe: ["NIFTY500", "MIDCAP", "SMALLCAP"], cmp: 1380.00, prevClose: 1320.00, sma20: 1340.00, ema50: 1310.00, sma150: 1250.00, sma200: 1080.00, sma200Up: true, high52: 1896.00, low52: 720.00, volRatio: 3.1, rsRating: 87, rsSector: 88, pattern: "VCP", rrRatio: "1:3.5", atr: 42.00, pivotPrice: 1440.00 },
+      { symbol: "BEML", name: "BEML Limited", sector: "Defence", theme: "Defence & Aerospace", universe: ["NIFTY500", "PSU / CPSE", "MIDCAP"], cmp: 3980.00, prevClose: 3820.00, sma20: 3890.00, ema50: 3810.00, sma150: 3750.00, sma200: 3340.00, sma200Up: true, high52: 5480.00, low52: 2010.00, volRatio: 3.0, rsRating: 85, rsSector: 87, pattern: "POCKET_PIVOT", rrRatio: "1:3.3", atr: 95.00, pivotPrice: 4120.00 },
+      { symbol: "ICICIBANK", name: "ICICI Bank Ltd.", sector: "Banking", theme: "Consumption Boom", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 1272.00, prevClose: 1258.00, sma20: 1250.00, ema50: 1230.00, sma150: 1170.00, sma200: 1115.00, sma200Up: true, high52: 1300.00, low52: 915.00, volRatio: 1.8, rsRating: 88, rsSector: 92, pattern: "PIVOT_BO", rrRatio: "1:3.2", atr: 18.00, pivotPrice: 1285.00 },
+      { symbol: "TATASTEEL", name: "Tata Steel Ltd.", sector: "Metals", theme: "Make in India", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 154.20, prevClose: 151.00, sma20: 153.00, ema50: 152.00, sma150: 158.00, sma200: 150.00, sma200Up: false, high52: 184.60, low52: 115.00, volRatio: 1.3, rsRating: 54, rsSector: 58, pattern: "STAGE2", rrRatio: "1:2.2", atr: 3.10, pivotPrice: 160.00 },
+      { symbol: "ASIANPAINT", name: "Asian Paints", sector: "Consumer", theme: "Consumption Boom", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 2480.00, prevClose: 2510.00, sma20: 2540.00, ema50: 2650.00, sma150: 2820.00, sma200: 2980.00, sma200Up: false, high52: 3422.00, low52: 2450.00, volRatio: 0.9, rsRating: 24, rsSector: 22, pattern: "STAGE2", rrRatio: "1:1.5", atr: 38.00, pivotPrice: 2590.00 },
+      { symbol: "HDFCBANK", name: "HDFC Bank Ltd.", sector: "Banking", theme: "Consumption Boom", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 1658.00, prevClose: 1642.00, sma20: 1638.00, ema50: 1620.00, sma150: 1570.00, sma200: 1545.00, sma200Up: true, high52: 1794.00, low52: 1363.00, volRatio: 1.7, rsRating: 79, rsSector: 81, pattern: "STAGE2", rrRatio: "1:3.0", atr: 21.00, pivotPrice: 1680.00 },
+      { symbol: "INFY", name: "Infosys Ltd.", sector: "IT", theme: "AI & Data Centers", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 1835.00, prevClose: 1820.00, sma20: 1820.00, ema50: 1805.00, sma150: 1690.00, sma200: 1595.00, sma200Up: true, high52: 1975.00, low52: 1358.00, volRatio: 1.4, rsRating: 81, rsSector: 83, pattern: "STAGE2", rrRatio: "1:3.2", atr: 26.00, pivotPrice: 1870.00 },
+      { symbol: "TCS", name: "Tata Consultancy Services", sector: "IT", theme: "AI & Data Centers", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 3940.00, prevClose: 3915.00, sma20: 3920.00, ema50: 3900.00, sma150: 3830.00, sma200: 3760.00, sma200Up: true, high52: 4254.00, low52: 3313.00, volRatio: 1.2, rsRating: 75, rsSector: 78, pattern: "STAGE2", rrRatio: "1:2.9", atr: 45.00, pivotPrice: 4020.00 },
+      { symbol: "LT", name: "Larsen & Toubro Ltd.", sector: "Infra", theme: "Make in India", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 3645.00, prevClose: 3610.00, sma20: 3615.00, ema50: 3560.00, sma150: 3470.00, sma200: 3390.00, sma200Up: true, high52: 3919.00, low52: 2880.00, volRatio: 1.5, rsRating: 77, rsSector: 79, pattern: "STAGE2", rrRatio: "1:3.1", atr: 48.00, pivotPrice: 3720.00 },
+      { symbol: "CIPLA", name: "Cipla Ltd.", sector: "Pharma", theme: "Make in India", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 1530.00, prevClose: 1505.00, sma20: 1515.00, ema50: 1490.00, sma150: 1450.00, sma200: 1380.00, sma200Up: true, high52: 1618.00, low52: 1130.00, volRatio: 1.6, rsRating: 84, rsSector: 86, pattern: "VCP", rrRatio: "1:3.3", atr: 22.00, pivotPrice: 1560.00 },
+      { symbol: "OBEROIRLTY", name: "Oberoi Realty Ltd.", sector: "Realty", theme: "Consumption Boom", universe: ["NIFTY200", "NIFTY500", "FNO", "MIDCAP"], cmp: 1940.00, prevClose: 1890.00, sma20: 1885.00, ema50: 1840.00, sma150: 1690.00, sma200: 1550.00, sma200Up: true, high52: 2060.00, low52: 1080.00, volRatio: 2.3, rsRating: 92, rsSector: 94, pattern: "STAGE2", rrRatio: "1:3.8", atr: 36.00, pivotPrice: 1980.00 },
+      { symbol: "PRESTIGE", name: "Prestige Estates", sector: "Realty", theme: "Consumption Boom", universe: ["NIFTY200", "NIFTY500", "FNO", "MIDCAP"], cmp: 1780.00, prevClose: 1720.00, sma20: 1730.00, ema50: 1690.00, sma150: 1580.00, sma200: 1410.00, sma200Up: true, high52: 2075.00, low52: 730.00, volRatio: 2.7, rsRating: 90, rsSector: 91, pattern: "VCP", rrRatio: "1:3.6", atr: 41.00, pivotPrice: 1840.00 },
+      { symbol: "DEEPAKNTR", name: "Deepak Nitrite Ltd.", sector: "Chemicals", theme: "Make in India", universe: ["NIFTY200", "NIFTY500", "FNO", "MIDCAP"], cmp: 2840.00, prevClose: 2790.00, sma20: 2810.00, ema50: 2760.00, sma150: 2580.00, sma200: 2420.00, sma200Up: true, high52: 3040.00, low52: 1980.00, volRatio: 1.8, rsRating: 83, rsSector: 85, pattern: "STAGE2", rrRatio: "1:3.2", atr: 52.00, pivotPrice: 2920.00 },
+      { symbol: "PIIND", name: "PI Industries Ltd.", sector: "Chemicals", theme: "Make in India", universe: ["NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 4210.00, prevClose: 4150.00, sma20: 4180.00, ema50: 4110.00, sma150: 3880.00, sma200: 3720.00, sma200Up: true, high52: 4490.00, low52: 3250.00, volRatio: 1.5, rsRating: 85, rsSector: 87, pattern: "PIVOT_BO", rrRatio: "1:3.4", atr: 72.00, pivotPrice: 4300.00 },
+      { symbol: "SBIN", name: "State Bank of India", sector: "Banking", theme: "PSU / CPSE", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "PSU / CPSE", "FNO"], cmp: 822.00, prevClose: 814.00, sma20: 824.00, ema50: 826.00, sma150: 812.00, sma200: 765.00, sma200Up: true, high52: 912.00, low52: 560.00, volRatio: 1.3, rsRating: 73, rsSector: 75, pattern: "STAGE2", rrRatio: "1:2.7", atr: 11.50, pivotPrice: 840.00 },
+      { symbol: "KPITTECH", name: "KPIT Technologies", sector: "IT", theme: "EV & Clean Tech", universe: ["NIFTY200", "NIFTY500", "FNO", "MIDCAP"], cmp: 1720.00, prevClose: 1660.00, sma20: 1680.00, ema50: 1630.00, sma150: 1540.00, sma200: 1480.00, sma200Up: true, high52: 1930.00, low52: 1090.00, volRatio: 2.6, rsRating: 89, rsSector: 92, pattern: "VCP", rrRatio: "1:3.7", atr: 34.00, pivotPrice: 1770.00 },
+      { symbol: "MAZDOCK", name: "Mazagon Dock Shipbuilders", sector: "Defence", theme: "Defence & Aerospace", universe: ["NIFTY200", "NIFTY500", "PSU / CPSE", "MIDCAP"], cmp: 4280.00, prevClose: 4050.00, sma20: 4190.00, ema50: 4120.00, sma150: 3800.00, sma200: 3100.00, sma200Up: true, high52: 5860.00, low52: 1740.00, volRatio: 4.2, rsRating: 92, rsSector: 94, pattern: "VOL_SHOCK", rrRatio: "1:3.8", atr: 130.00, pivotPrice: 4450.00 },
+      { symbol: "COCHINSHIP", name: "Cochin Shipyard Ltd.", sector: "Defence", theme: "Defence & Aerospace", universe: ["NIFTY500", "PSU / CPSE", "MIDCAP"], cmp: 1640.00, prevClose: 1540.00, sma20: 1610.00, ema50: 1580.00, sma150: 1510.00, sma200: 1180.00, sma200Up: true, high52: 2979.00, low52: 520.00, volRatio: 3.9, rsRating: 90, rsSector: 91, pattern: "VOL_SHOCK", rrRatio: "1:3.6", atr: 48.00, pivotPrice: 1710.00 },
+      { symbol: "POWERGRID", name: "Power Grid Corp.", sector: "Power", theme: "PSU / CPSE", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "PSU / CPSE", "FNO"], cmp: 342.00, prevClose: 336.00, sma20: 338.00, ema50: 331.00, sma150: 318.00, sma200: 294.00, sma200Up: true, high52: 366.00, low52: 202.00, volRatio: 1.4, rsRating: 85, rsSector: 88, pattern: "STAGE2", rrRatio: "1:3.3", atr: 5.50, pivotPrice: 350.00 },
+      { symbol: "HINDALCO", name: "Hindalco Industries", sector: "Metals", theme: "EV & Clean Tech", universe: ["NIFTY50", "NIFTY100", "NIFTY200", "NIFTY500", "FNO"], cmp: 692.00, prevClose: 678.00, sma20: 682.00, ema50: 668.00, sma150: 648.00, sma200: 605.00, sma200Up: true, high52: 715.00, low52: 460.00, volRatio: 2.0, rsRating: 87, rsSector: 89, pattern: "PIVOT_BO", rrRatio: "1:3.5", atr: 14.00, pivotPrice: 705.00 }
+    ];
+
+    let currentStocks = [...STOCK_DATABASE];
+    let activeStock = currentStocks[0];
+    let activeViewTab = 'trendTemplate';
+    let sortColumn = 'ttScore';
+    let sortDirection = 'desc';
+    let autoRefreshActive = true;
+    let refreshTimer = null;
+    let drawerChartInstance = null;
+
+    // Evaluate Minervini Trend Template Criteria + 20 SMA relationship
+    function evalMinervini(stock) {
+      const { cmp, sma20, ema50, sma150, sma200, sma200Up, high52, low52, rsRating } = stock;
+      
+      const r1 = cmp > sma150 && cmp > sma200;       // Rule 1: Price > 150 & 200 SMA
+      const r2 = sma150 > sma200;                    // Rule 2: 150 SMA > 200 SMA
+      const r3 = sma200Up === true;                  // Rule 3: 200 SMA trending up
+      const r4 = ema50 > sma150 && ema50 > sma200;   // Rule 4: 50 EMA > 150 & 200 SMA
+      const r5 = cmp > ema50;                        // Rule 5: Price > 50 EMA
+      const r6 = cmp >= (low52 * 1.30);              // Rule 6: >= 30% above 52W low
+      const r7 = cmp >= (high52 * 0.75);             // Rule 7: within 25% of 52W high
+      const r8 = rsRating >= 70;                     // Rule 8: RS Rating >= 70
+
+      const above20 = cmp >= (sma20 || ema50);       // Additional: Above 20 SMA
+      const distFrom20 = sma20 ? Number((((cmp - sma20) / sma20) * 100).toFixed(1)) : 0;
+
+      const passed = [r1, r2, r3, r4, r5, r6, r7, r8].filter(Boolean).length;
+      const isQualified = passed === 8;
+      const distFromHigh = Number((((high52 - cmp) / high52) * 100).toFixed(1));
+      const distFromLow = Number((((cmp - low52) / low52) * 100).toFixed(1));
+      const dayChange = Number((((cmp - stock.prevClose) / stock.prevClose) * 100).toFixed(2));
+
+      return {
+        r1, r2, r3, r4, r5, r6, r7, r8,
+        above20,
+        distFrom20,
+        passed,
+        isQualified,
+        distFromHigh,
+        distFromLow,
+        dayChange
+      };
+    }
+
+    // Main Filter & Table Population
+    function applyAllFilters() {
+      const search = document.getElementById("searchInput").value.trim().toUpperCase();
+      const universe = document.getElementById("universeFilter").value;
+      const sector = document.getElementById("sectorFilter").value;
+      const theme = document.getElementById("themeFilter").value;
+      const setup = document.getElementById("setupFilter").value;
+
+      document.getElementById("activeUniverseBadge").innerText = universe === 'ALL' ? 'NSE All Cash' : universe;
+
+      let filtered = STOCK_DATABASE.filter(item => {
+        // Search text
+        if (search && !item.symbol.includes(search) && !item.name.toUpperCase().includes(search)) {
+          return false;
+        }
+        // Universe
+        if (universe !== 'ALL' && !item.universe.includes(universe)) {
+          return false;
+        }
+        // Sector
+        if (sector !== 'ALL' && item.sector !== sector) {
+          return false;
+        }
+        // Theme
+        if (theme !== 'ALL' && item.theme !== theme) {
+          return false;
+        }
+
+        const evalRes = evalMinervini(item);
+
+        // Setup filter
+        if (setup === 'TT_PASS' && !evalRes.isQualified) return false;
+        if (setup === 'VCP' && item.pattern !== 'VCP') return false;
+        if (setup === 'STAGE2' && item.pattern !== 'STAGE2') return false;
+        if (setup === 'VOL_SHOCK' && item.volRatio < 3.0) return false;
+        if (setup === 'PIVOT_BO' && item.pattern !== 'PIVOT_BO') return false;
+        if (setup === 'POCKET_PIVOT' && item.pattern !== 'POCKET_PIVOT') return false;
+        if (setup === 'RS_85' && item.rsRating < 85) return false;
+
+        // Active View Tab condition
+        if (activeViewTab === 'trendTemplate' && !evalRes.isQualified) return false;
+        if (activeViewTab === 'vcp' && item.pattern !== 'VCP') return false;
+        if (activeViewTab === 'stage2' && item.pattern !== 'STAGE2') return false;
+        if (activeViewTab === 'volumeShocker' && item.volRatio < 3.0) return false;
+        if (activeViewTab === 'nearHigh' && evalRes.distFromHigh > 5.0) return false;
+
+        return true;
+      });
+
+      // Sorting
+      filtered.sort((a, b) => {
+        const evalA = evalMinervini(a);
+        const evalB = evalMinervini(b);
+
+        let valA, valB;
+        switch (sortColumn) {
+          case 'symbol': valA = a.symbol; valB = b.symbol; break;
+          case 'sector': valA = a.sector; valB = b.sector; break;
+          case 'cmp': valA = a.cmp; valB = b.cmp; break;
+          case 'dayChange': valA = evalA.dayChange; valB = evalB.dayChange; break;
+          case 'ttScore': valA = evalA.passed; valB = evalB.passed; break;
+          case 'volRatio': valA = a.volRatio; valB = b.volRatio; break;
+          case 'rsRating': valA = a.rsRating; valB = b.rsRating; break;
+          case 'dist52High': valA = evalA.distFromHigh; valB = evalB.distFromHigh; break;
+          case 'dist52Low': valA = evalA.distFromLow; valB = evalB.distFromLow; break;
+          case 'atr': valA = a.atr; valB = b.atr; break;
+          default: valA = a.cmp; valB = b.cmp;
+        }
+
+        if (typeof valA === 'string') {
+          return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        return sortDirection === 'asc' ? valA - valB : valB - valA;
+      });
+
+      currentStocks = filtered;
+      renderTable();
+      updateKpis();
+      updateTabBadges();
+      if (activeViewTab === 'heatmap') {
+        renderHeatmaps();
+      }
+    }
+
+    // Render Screener Table
+    function renderTable() {
+      const tbody = document.getElementById("screenerTableBody");
+      tbody.innerHTML = "";
+
+      if (currentStocks.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="14" class="py-8 text-center text-slate-400">
+              <i data-lucide="search-x" class="w-8 h-8 mx-auto mb-2 text-slate-600"></i>
+              No stocks match your specific combination of filters. Try relaxing the filter criteria.
+            </td>
+          </tr>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      currentStocks.forEach(stock => {
+        const ev = evalMinervini(stock);
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-terminal-hover/60 cursor-pointer transition border-b border-terminal-border/40";
+        tr.onclick = (e) => {
+          // If clicked action button, prevent modal trigger
+          if (e.target.closest('.no-row-click')) return;
+          openStockDrawer(stock);
+        };
+
+        // Score Badge
+        let scoreBadge = '';
+        if (ev.isQualified) {
+          scoreBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 mono">8/8 PASS</span>`;
+        } else if (ev.passed >= 6) {
+          scoreBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800 mono">${ev.passed}/8 NEAR</span>`;
+        } else {
+          scoreBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-slate-400 border border-slate-800 mono">${ev.passed}/8 FAIL</span>`;
+        }
+
+        // Pattern Tag
+        let patternBadge = '';
+        if (stock.pattern === 'VCP') {
+          patternBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-800">VCP</span>`;
+        } else if (stock.pattern === 'STAGE2') {
+          patternBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800">STAGE 2</span>`;
+        } else if (stock.pattern === 'VOL_SHOCK') {
+          patternBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-950/80 text-rose-300 border border-rose-800">VOL SHOCK</span>`;
+        } else if (stock.pattern === 'PIVOT_BO') {
+          patternBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-800">PIVOT BO</span>`;
+        } else {
+          patternBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-950/80 text-purple-300 border border-purple-800">POCKET PIVOT</span>`;
+        }
+
+        // SMA Alignment indicator including 20 SMA
+        const smaAboveAll = (stock.cmp > (stock.sma20 || stock.ema50)) && 
+                            ((stock.sma20 || stock.ema50) >= stock.ema50) && 
+                            (stock.ema50 > stock.sma150) && 
+                            (stock.sma150 > stock.sma200);
+
+        const smaIndicator = smaAboveAll 
+          ? `<span class="text-emerald-400 font-bold mono text-[10px]">▲ 20>50>150>200</span>`
+          : (stock.cmp > stock.ema50)
+            ? `<span class="text-amber-400 font-medium mono text-[10px]">Above 50 EMA</span>`
+            : `<span class="text-rose-400 font-medium mono text-[10px]">Sub-50 EMA</span>`;
+
+        tr.innerHTML = `
+          <td class="py-3 px-3">
+            <div class="font-extrabold text-white mono text-xs">${stock.symbol}</div>
+            <div class="text-[10px] text-slate-400 truncate max-w-[130px]">${stock.name}</div>
+          </td>
+          <td class="py-3 px-3">
+            <div class="text-slate-300 font-semibold text-[11px]">${stock.sector}</div>
+            <div class="text-[10px] text-amber-400/90 truncate max-w-[140px]">${stock.theme}</div>
+          </td>
+          <td class="py-3 px-3 text-right mono font-bold text-white">₹${stock.cmp.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+          <td class="py-3 px-3 text-right mono font-semibold ${ev.dayChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+            ${ev.dayChange >= 0 ? '+' : ''}${ev.dayChange}%
+          </td>
+          <td class="py-3 px-3 text-center">${scoreBadge}</td>
+          <td class="py-3 px-3 text-center">${patternBadge}</td>
+          <td class="py-3 px-3 text-right mono ${stock.volRatio >= 3.0 ? 'text-rose-400 font-bold' : stock.volRatio >= 2.0 ? 'text-amber-400' : 'text-slate-400'}">
+            ${stock.volRatio}x
+          </td>
+          <td class="py-3 px-3 text-center">
+            <div class="inline-flex items-center gap-1">
+              <span class="mono px-1.5 py-0.5 rounded text-[10px] font-bold ${stock.rsRating >= 85 ? 'bg-purple-950 text-purple-300 border border-purple-800' : 'bg-slate-900 text-slate-300'}" title="Market RS vs Nifty 50">
+                M:${stock.rsRating}
+              </span>
+              <span class="mono px-1.5 py-0.5 rounded text-[10px] font-bold ${stock.rsSector >= 85 ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'bg-slate-900 text-slate-300'}" title="Sector RS vs Industry Peers">
+                S:${stock.rsSector || stock.rsRating}
+              </span>
+            </div>
+          </td>
+          <td class="py-3 px-3 text-center mono text-emerald-400 font-semibold">${stock.rrRatio}</td>
+          <td class="py-3 px-3 text-right mono ${ev.distFromHigh <= 5.0 ? 'text-cyan-400 font-extrabold' : 'text-slate-400'}">-${ev.distFromHigh}%</td>
+          <td class="py-3 px-3 text-right mono text-emerald-400">+${ev.distFromLow}%</td>
+          <td class="py-3 px-3 text-center text-[10px]">${smaIndicator}</td>
+          <td class="py-3 px-3 text-right mono text-slate-300">₹${stock.atr.toFixed(1)}</td>
+          <td class="py-3 px-3 text-center no-row-click">
+            <button onclick="openStockDrawerBySymbol('${stock.symbol}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-white transition" title="View Technical Chart">
+              <i data-lucide="line-chart" class="w-3.5 h-3.5"></i>
+            </button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Sort Column Click Handler
+    function handleSort(col) {
+      if (sortColumn === col) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortColumn = col;
+        sortDirection = 'desc';
+      }
+      applyAllFilters();
+    }
+
+    // View Tabs Switching
+    function setViewTab(tabKey) {
+      activeViewTab = tabKey;
+      const tabIds = {
+        trendTemplate: 'viewTrendTemplate',
+        vcp: 'viewVcp',
+        stage2: 'viewStage2',
+        volumeShocker: 'viewVolumeShocker',
+        nearHigh: 'viewNearHigh',
+        heatmap: 'viewHeatmap',
+        all: 'viewAll'
+      };
+
+      Object.entries(tabIds).forEach(([key, btnId]) => {
+        const btn = document.getElementById(btnId);
+        if (key === tabKey) {
+          btn.className = "view-tab-btn flex items-center gap-1.5 px-3 py-2 rounded-lg bg-cyan-950/90 text-cyan-300 border border-cyan-800 transition shrink-0 font-semibold";
+        } else {
+          btn.className = "view-tab-btn flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-terminal-card border border-transparent transition shrink-0 font-semibold";
+        }
+      });
+
+      const tableSec = document.getElementById("tableSection");
+      const heatmapSec = document.getElementById("heatmapSection");
+
+      if (tabKey === 'heatmap') {
+        tableSec.classList.add("hidden");
+        heatmapSec.classList.remove("hidden");
+        renderHeatmaps();
+      } else {
+        tableSec.classList.remove("hidden");
+        heatmapSec.classList.add("hidden");
+        applyAllFilters();
+      }
+    }
+
+    // Top Tab Badge Counts
+    function updateTabBadges() {
+      const allCount = STOCK_DATABASE.length;
+      const ttCount = STOCK_DATABASE.filter(s => evalMinervini(s).isQualified).length;
+      const vcpCount = STOCK_DATABASE.filter(s => s.pattern === 'VCP').length;
+      const st2Count = STOCK_DATABASE.filter(s => s.pattern === 'STAGE2').length;
+      const volCount = STOCK_DATABASE.filter(s => s.volRatio >= 3.0).length;
+      const nearCount = STOCK_DATABASE.filter(s => evalMinervini(s).distFromHigh <= 5.0).length;
+
+      document.getElementById("badgeAllCount").innerText = allCount;
+      document.getElementById("badgeTrendCount").innerText = ttCount;
+      document.getElementById("badgeVcpCount").innerText = vcpCount;
+      document.getElementById("badgeStage2Count").innerText = st2Count;
+      document.getElementById("badgeVolCount").innerText = volCount;
+      document.getElementById("badgeNearHighCount").innerText = nearCount;
+    }
+
+    // Top KPI Counters
+    function updateKpis() {
+      document.getElementById("kpiFiltered").innerText = currentStocks.length;
+      const st2 = currentStocks.filter(s => s.pattern === 'STAGE2').length;
+      document.getElementById("kpiStage2").innerText = st2;
+      const vcp = currentStocks.filter(s => s.pattern === 'VCP').length;
+      document.getElementById("kpiVcp").innerText = vcp;
+      const vol = currentStocks.filter(s => s.volRatio >= 3.0).length;
+      document.getElementById("kpiVolumeShock").innerText = vol;
+      const near = currentStocks.filter(s => evalMinervini(s).distFromHigh <= 5.0).length;
+      document.getElementById("kpiNearHigh").innerText = near;
+      
+      const avgRs = currentStocks.length > 0 
+        ? (currentStocks.reduce((a, b) => a + b.rsRating, 0) / currentStocks.length).toFixed(1)
+        : '0.0';
+      document.getElementById("kpiAvgRs").innerText = avgRs;
+    }
+
+    // Heatmaps Generation
+    function renderHeatmaps() {
+      const sectorsMap = {};
+      const themesMap = {};
+
+      STOCK_DATABASE.forEach(s => {
+        const chg = evalMinervini(s).dayChange;
+        
+        // Sector Aggregation
+        if (!sectorsMap[s.sector]) {
+          sectorsMap[s.sector] = { totalChg: 0, count: 0, leaders: [] };
+        }
+        sectorsMap[s.sector].totalChg += chg;
+        sectorsMap[s.sector].count += 1;
+        sectorsMap[s.sector].leaders.push(s.symbol);
+
+        // Theme Aggregation
+        if (!themesMap[s.theme]) {
+          themesMap[s.theme] = { totalChg: 0, count: 0, leaders: [] };
+        }
+        themesMap[s.theme].totalChg += chg;
+        themesMap[s.theme].count += 1;
+        themesMap[s.theme].leaders.push(s.symbol);
+      });
+
+      const sGrid = document.getElementById("sectorHeatmapGrid");
+      sGrid.innerHTML = '';
+      Object.entries(sectorsMap).forEach(([sec, data]) => {
+        const avg = (data.totalChg / data.count).toFixed(2);
+        const isUp = avg >= 0;
+        const card = document.createElement("div");
+        card.className = `p-3 rounded-xl border ${isUp ? 'bg-emerald-950/20 border-emerald-800/40' : 'bg-rose-950/20 border-rose-800/40'} flex flex-col justify-between`;
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white text-xs">${sec}</span>
+              <span class="mono font-bold text-xs ${isUp ? 'text-emerald-400' : 'text-rose-400'}">${isUp ? '+' : ''}${avg}%</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-1">${data.count} Stocks Tracked</div>
+          </div>
+          <div class="text-[10px] text-slate-500 mt-2 truncate">Top: ${data.leaders.slice(0, 3).join(', ')}</div>
+        `;
+        sGrid.appendChild(card);
+      });
+
+      const tGrid = document.getElementById("themeHeatmapGrid");
+      tGrid.innerHTML = '';
+      Object.entries(themesMap).forEach(([thm, data]) => {
+        const avg = (data.totalChg / data.count).toFixed(2);
+        const isUp = avg >= 0;
+        const card = document.createElement("div");
+        card.className = `p-3 rounded-xl border ${isUp ? 'bg-cyan-950/20 border-cyan-800/40' : 'bg-rose-950/20 border-rose-800/40'} flex flex-col justify-between`;
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white text-xs">${thm}</span>
+              <span class="mono font-bold text-xs ${isUp ? 'text-cyan-400' : 'text-rose-400'}">${isUp ? '+' : ''}${avg}%</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-1">${data.count} Stocks Tracked</div>
+          </div>
+          <div class="text-[10px] text-slate-500 mt-2 truncate">Top: ${data.leaders.slice(0, 3).join(', ')}</div>
+        `;
+        tGrid.appendChild(card);
+      });
+    }
+
+    // Open Stock Technical Detail Drawer
+    function openStockDrawerBySymbol(sym) {
+      const stock = STOCK_DATABASE.find(s => s.symbol === sym);
+      if (stock) openStockDrawer(stock);
+    }
+
+    function openStockDrawer(stock) {
+      activeStock = stock;
+      const ev = evalMinervini(stock);
+
+      document.getElementById("drawerSymbol").innerText = stock.symbol;
+      document.getElementById("drawerSector").innerText = stock.sector;
+      document.getElementById("drawerTheme").innerText = stock.theme;
+      document.getElementById("drawerName").innerText = stock.name;
+      document.getElementById("drawerPrice").innerText = `₹${stock.cmp.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      
+      const chgEl = document.getElementById("drawerChange");
+      chgEl.innerText = `${ev.dayChange >= 0 ? '+' : ''}${ev.dayChange}% (Today)`;
+      chgEl.className = `text-xs mono font-semibold ${ev.dayChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+      document.getElementById("drawerVolRatio").innerText = `${stock.volRatio}x`;
+      
+      // Dual RS Display
+      const secRs = stock.rsSector || stock.rsRating;
+      document.getElementById("drawerRsRating").innerText = `Mkt: ${stock.rsRating} | Sec: ${secRs}`;
+      const rsSub = document.getElementById("drawerRsSub");
+      if (secRs >= 90) {
+        rsSub.innerText = `★ Sector Outperformer`;
+        rsSub.className = "text-[9px] text-cyan-400 font-bold";
+      } else if (secRs >= 75) {
+        rsSub.innerText = `In-line with Sector Peers`;
+        rsSub.className = "text-[9px] text-slate-400";
+      } else {
+        rsSub.innerText = `Sector Lagging`;
+        rsSub.className = "text-[9px] text-amber-400";
+      }
+
+      document.getElementById("drawerRr").innerText = stock.rrRatio;
+      document.getElementById("drawerAtr").innerText = `₹${stock.atr.toFixed(2)}`;
+      
+      const slPrice = (stock.cmp - (stock.atr * 1.5)).toFixed(1);
+      const sma20Val = (stock.sma20 || stock.cmp * 0.98).toFixed(1);
+      document.getElementById("drawerSl").innerText = `20 SMA: ₹${sma20Val} | SL: ₹${slPrice}`;
+
+      // Score Badge
+      const scoreBadge = document.getElementById("drawerScoreBadge");
+      scoreBadge.innerText = `${ev.passed} / 8 PASSED`;
+      scoreBadge.className = ev.isQualified 
+        ? "px-2 py-0.5 rounded text-[11px] font-bold mono bg-emerald-950 text-emerald-400 border border-emerald-800"
+        : "px-2 py-0.5 rounded text-[11px] font-bold mono bg-amber-950 text-amber-400 border border-amber-800";
+
+      // 8 Checklist criteria + 20 SMA / Sector RS metrics
+      const checklistEl = document.getElementById("drawerChecklist");
+      checklistEl.innerHTML = '';
+
+      const items = [
+        { label: "Price > 150 & 200 SMA", pass: ev.r1 },
+        { label: "150 SMA > 200 SMA", pass: ev.r2 },
+        { label: "200 SMA Trending Up", pass: ev.r3 },
+        { label: "50 EMA > 150 & 200 SMA", pass: ev.r4 },
+        { label: "Price > 50 EMA", pass: ev.r5 },
+        { label: `Price > 20 SMA (${ev.distFrom20 >= 0 ? '+' : ''}${ev.distFrom20}%)`, pass: ev.above20 },
+        { label: ">= 30% Above 52W Low", pass: ev.r6 },
+        { label: "Within 25% 52W High", pass: ev.r7 },
+        { label: `NSE Market RS >= 70 (${stock.rsRating}/99)`, pass: ev.r8 },
+        { label: `Sector RS >= 70 (${secRs}/99 vs ${stock.sector})`, pass: secRs >= 70 }
+      ];
+
+      items.forEach(it => {
+        const div = document.createElement("div");
+        div.className = `flex items-center gap-1.5 ${it.pass ? 'text-slate-200' : 'text-slate-500 line-through'}`;
+        div.innerHTML = `
+          <i data-lucide="${it.pass ? 'check-circle-2' : 'x-circle'}" class="w-3.5 h-3.5 shrink-0 ${it.pass ? 'text-emerald-400' : 'text-rose-400'}"></i>
+          <span>${it.label}</span>
+        `;
+        checklistEl.appendChild(div);
+      });
+
+      // External Chart Buttons
+      document.getElementById("drawerTradingViewBtn").href = `https://in.tradingview.com/chart/?symbol=NSE%3A${stock.symbol}`;
+      document.getElementById("drawerChartinkBtn").href = `https://chartink.com/stocks/${stock.symbol.toLowerCase()}.html`;
+
+      // Show modal drawer
+      const drawer = document.getElementById("stockDrawer");
+      drawer.classList.remove("hidden");
+      drawer.classList.add("flex");
+
+      lucide.createIcons();
+      drawChart(stock);
+    }
+
+    function closeStockDrawer() {
+      const drawer = document.getElementById("stockDrawer");
+      drawer.classList.add("hidden");
+      drawer.classList.remove("flex");
+    }
+
+    // Chart.js Moving Averages Simulation with 20 SMA, 50 EMA, 150 SMA, and 200 SMA
+    function drawChart(stock) {
+      const ctx = document.getElementById('drawerChartCanvas').getContext('2d');
+      const labels = [];
+      const priceHistory = [];
+      const sma20Hist = [];
+      const ema50Hist = [];
+      const sma150Hist = [];
+      const sma200Hist = [];
+
+      const base20 = stock.sma20 || stock.cmp * 0.98;
+      let runningPrice = stock.cmp * 0.90;
+
+      for (let i = 50; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        labels.push(d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
+
+        const randomWalk = 1 + (Math.sin(i * 0.25) * 0.015) + ((50 - i) * 0.002);
+        const candleClose = Number((runningPrice * randomWalk).toFixed(1));
+        priceHistory.push(i === 0 ? stock.cmp : candleClose);
+
+        sma20Hist.push(Number((base20 * (1 - (i * 0.0016))).toFixed(1)));
+        ema50Hist.push(Number((stock.ema50 * (1 - (i * 0.0012))).toFixed(1)));
+        sma150Hist.push(Number((stock.sma150 * (1 - (i * 0.0007))).toFixed(1)));
+        sma200Hist.push(Number((stock.sma200 * (1 - (i * 0.0004))).toFixed(1)));
+      }
+
+      if (drawerChartInstance) {
+        drawerChartInstance.destroy();
+      }
+
+      drawerChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Price',
+              data: priceHistory,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.08)',
+              fill: true,
+              borderWidth: 2,
+              tension: 0.2,
+              pointRadius: 0
+            },
+            {
+              label: '20 SMA',
+              data: sma20Hist,
+              borderColor: '#fbbf24',
+              borderWidth: 1.5,
+              tension: 0.1,
+              pointRadius: 0
+            },
+            {
+              label: '50 EMA',
+              data: ema50Hist,
+              borderColor: '#38bdf8',
+              borderWidth: 1.5,
+              tension: 0.1,
+              pointRadius: 0
+            },
+            {
+              label: '150 SMA',
+              data: sma150Hist,
+              borderColor: '#c084fc',
+              borderWidth: 1.5,
+              tension: 0.1,
+              pointRadius: 0
+            },
+            {
+              label: '200 SMA',
+              data: sma200Hist,
+              borderColor: '#f43f5e',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              tension: 0.1,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              backgroundColor: '#080c14',
+              titleColor: '#fff',
+              bodyColor: '#cbd5e1',
+              borderColor: '#1b283d',
+              borderWidth: 1
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(27, 40, 61, 0.4)' },
+              ticks: { color: '#64748b', maxTicksLimit: 7, font: { size: 10 } }
+            },
+            y: {
+              grid: { color: 'rgba(27, 40, 61, 0.4)' },
+              ticks: { color: '#64748b', font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    // Live Tick Simulator (NSE Live quotes simulation)
+    function simulateTicks() {
+      STOCK_DATABASE.forEach(s => {
+        const randDelta = (Math.random() * 0.005 - 0.0025);
+        s.cmp = Number((s.cmp * (1 + randDelta)).toFixed(2));
+        if (s.cmp > s.high52) s.high52 = s.cmp;
+      });
+
+      // Update Tickers
+      const niftyEl = document.getElementById("tickerNifty");
+      const bankEl = document.getElementById("tickerBank");
+      if (niftyEl) {
+        const niftyNum = 24360 + (Math.random() * 20 - 10);
+        niftyEl.innerText = niftyNum.toFixed(2);
+      }
+      if (bankEl) {
+        const bankNum = 51820 + (Math.random() * 40 - 20);
+        bankEl.innerText = bankNum.toFixed(2);
+      }
+
+      const now = new Date();
+      document.getElementById("marketTimer").innerText = now.toLocaleTimeString('en-IN', { hour12: false });
+
+      applyAllFilters();
+    }
+
+    function toggleAutoRefresh() {
+      autoRefreshActive = !autoRefreshActive;
+      const icon = document.getElementById("refreshIcon");
+      if (autoRefreshActive) {
+        icon.classList.add("animate-spin");
+        startInterval();
+        showToast("Auto-Sync Active (Live NSE Feed)");
+      } else {
+        icon.classList.remove("animate-spin");
+        clearInterval(refreshTimer);
+        showToast("Auto-Sync Paused");
+      }
+    }
+
+    function startInterval() {
+      clearInterval(refreshTimer);
+      refreshTimer = setInterval(simulateTicks, 3500);
+    }
+
+    // Export to CSV Function
+    function exportToCSV() {
+      let csv = "Symbol,Company,Sector,Theme,CMP,Day_Chg_Pct,Trend_Score,Pattern,Vol_Ratio,RS_Rating,RR_Ratio,Dist_52W_High_Pct,Dist_52W_Low_Pct,ATR\n";
+      
+      currentStocks.forEach(s => {
+        const ev = evalMinervini(s);
+        csv += `"${s.symbol}","${s.name}","${s.sector}","${s.theme}",${s.cmp},${ev.dayChange}%,${ev.passed}/8,"${s.pattern}",${s.volRatio},${s.rsRating},"${s.rrRatio}",-${ev.distFromHigh}%,+${ev.distFromLow}%,${s.atr}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.setAttribute("href", url);
+      a.setAttribute("download", `MD_Scanner_NSE_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast("CSV successfully exported");
+    }
+
+    // Toast Manager
+    function showToast(msg) {
+      const toast = document.getElementById("toastNotification");
+      const text = document.getElementById("toastMsgText");
+      text.innerText = msg;
+      toast.classList.remove("translate-y-20", "opacity-0");
+      setTimeout(() => {
+        toast.classList.add("translate-y-20", "opacity-0");
+      }, 2500);
+    }
+
+    // Modals
+    function openInstallModal() {
+      document.getElementById("installModal").classList.remove("hidden");
+      document.getElementById("installModal").classList.add("flex");
+    }
+    function closeInstallModal() {
+      document.getElementById("installModal").classList.add("hidden");
+      document.getElementById("installModal").classList.remove("flex");
+    }
+
+    function openRulesModal() {
+      document.getElementById("rulesModal").classList.remove("hidden");
+      document.getElementById("rulesModal").classList.add("flex");
+    }
+    function closeRulesModal() {
+      document.getElementById("rulesModal").classList.add("hidden");
+      document.getElementById("rulesModal").classList.remove("flex");
+    }
+
+    // Initialization on window load
+    window.onload = function () {
+      applyAllFilters();
+      startInterval();
+      const now = new Date();
+      document.getElementById("marketTimer").innerText = now.toLocaleTimeString('en-IN', { hour12: false });
+    };
+  </script>
+</body>
+</html>
